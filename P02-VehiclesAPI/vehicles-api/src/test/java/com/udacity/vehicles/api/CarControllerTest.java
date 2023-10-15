@@ -11,6 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.udacity.vehicles.client.maps.MapsClient;
 import com.udacity.vehicles.client.prices.PriceClient;
 import com.udacity.vehicles.domain.Condition;
@@ -33,6 +35,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Implements testing of the CarController class.
@@ -57,6 +62,9 @@ public class CarControllerTest {
 
     @MockBean
     private MapsClient mapsClient;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * Creates pre-requisites for testing, such as an example car.
@@ -96,7 +104,29 @@ public class CarControllerTest {
          *   the whole list of vehicles. This should utilize the car from `getCar()`
          *   below (the vehicle will be the first in the list).
          */
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .get("/cars"))
+                .andExpect(status().isOk())
+                .andReturn();
 
+        String responseContent = result.getResponse().getContentAsString();
+        JsonNode jsonNode = objectMapper.readTree(responseContent);
+        JsonNode carDetails = jsonNode.path("_embedded").path("carList").get(0);
+        assertThat(carDetails.get("id").asLong()).isEqualTo(1);
+        assertThat(carDetails.get("condition").asText()).isEqualTo(getCar().getCondition().toString());
+        assertThat(carDetails.get("details").get("body").asText()).isEqualTo(getCar().getDetails().getBody());
+        assertThat(carDetails.get("details").get("model").asText()).isEqualTo(getCar().getDetails().getModel());
+        assertThat(carDetails.get("details").get("manufacturer").get("code").asInt()).isEqualTo(getCar().getDetails().getManufacturer().getCode());
+        assertThat(carDetails.get("details").get("manufacturer").get("name").asText()).isEqualTo(getCar().getDetails().getManufacturer().getName());
+        assertThat(carDetails.get("details").get("numberOfDoors").asInt()).isEqualTo(getCar().getDetails().getNumberOfDoors());
+        assertThat(carDetails.get("details").get("fuelType").asText()).isEqualTo(getCar().getDetails().getFuelType());
+        assertThat(carDetails.get("details").get("engine").asText()).isEqualTo(getCar().getDetails().getEngine());
+        assertThat(carDetails.get("details").get("mileage").asInt()).isEqualTo(getCar().getDetails().getMileage());
+        assertThat(carDetails.get("details").get("modelYear").asInt()).isEqualTo(getCar().getDetails().getModelYear());
+        assertThat(carDetails.get("details").get("productionYear").asInt()).isEqualTo(getCar().getDetails().getProductionYear());
+        assertThat(carDetails.get("details").get("externalColor").asText()).isEqualTo(getCar().getDetails().getExternalColor());
+        assertThat(carDetails.get("location").get("lat").asDouble()).isEqualTo(getCar().getLocation().getLat());
+        assertThat(carDetails.get("location").get("lon").asDouble()).isEqualTo(getCar().getLocation().getLon());
     }
 
     /**
@@ -109,6 +139,28 @@ public class CarControllerTest {
          * TODO: Add a test to check that the `get` method works by calling
          *   a vehicle by ID. This should utilize the car from `getCar()` below.
          */
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .get("/cars/1"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        JsonNode jsonNode = objectMapper.readTree(responseContent);
+        assertThat(jsonNode.get("id").asLong()).isEqualTo(1);
+        assertThat(jsonNode.get("condition").asText()).isEqualTo(getCar().getCondition().toString());
+        assertThat(jsonNode.get("details").get("body").asText()).isEqualTo(getCar().getDetails().getBody());
+        assertThat(jsonNode.get("details").get("model").asText()).isEqualTo(getCar().getDetails().getModel());
+        assertThat(jsonNode.get("details").get("manufacturer").get("code").asInt()).isEqualTo(getCar().getDetails().getManufacturer().getCode());
+        assertThat(jsonNode.get("details").get("manufacturer").get("name").asText()).isEqualTo(getCar().getDetails().getManufacturer().getName());
+        assertThat(jsonNode.get("details").get("numberOfDoors").asInt()).isEqualTo(getCar().getDetails().getNumberOfDoors());
+        assertThat(jsonNode.get("details").get("fuelType").asText()).isEqualTo(getCar().getDetails().getFuelType());
+        assertThat(jsonNode.get("details").get("engine").asText()).isEqualTo(getCar().getDetails().getEngine());
+        assertThat(jsonNode.get("details").get("mileage").asInt()).isEqualTo(getCar().getDetails().getMileage());
+        assertThat(jsonNode.get("details").get("modelYear").asInt()).isEqualTo(getCar().getDetails().getModelYear());
+        assertThat(jsonNode.get("details").get("productionYear").asInt()).isEqualTo(getCar().getDetails().getProductionYear());
+        assertThat(jsonNode.get("details").get("externalColor").asText()).isEqualTo(getCar().getDetails().getExternalColor());
+        assertThat(jsonNode.get("location").get("lat").asDouble()).isEqualTo(getCar().getLocation().getLat());
+        assertThat(jsonNode.get("location").get("lon").asDouble()).isEqualTo(getCar().getLocation().getLon());
     }
 
     /**
@@ -122,6 +174,10 @@ public class CarControllerTest {
          *   when the `delete` method is called from the Car Controller. This
          *   should utilize the car from `getCar()` below.
          */
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .delete("/cars/1"))
+                .andExpect(status().isNoContent())
+                .andReturn();
     }
 
     /**
